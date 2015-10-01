@@ -17,25 +17,26 @@ def add_gallery_post(generator):
             position = article.metadata.get('position')
 
 
-def add_gallery_page(generator):
+def add_person_page(generator):
 
     contentpath = generator.settings.get('PATH')
     gallerycontentpath = os.path.join(contentpath, 'people')
 
-    for page in generator.pages:
-        if 'gallery' in page.metadata.keys():
-            album = page.metadata.get('gallery')
-            galleryimages = []
-
-            pagegallerypath=os.path.join(gallerycontentpath, album)
-
-            if(os.path.isdir(pagegallerypath)):
-                for i in os.listdir(pagegallerypath):
-                    if not i.startswith('.') and os.path.isfile(os.path.join(os.path.join(gallerycontentpath, album), i)):
-                        galleryimages.append(i)
-
-            page.album = album
-            page.galleryimages = sorted(galleryimages)
+    for article in generator.articles:
+        if article.metadata.get('template') == 'person':
+            logger.debug(article.title)
+            # album = page.metadata.get('gallery')
+            # galleryimages = []
+            #
+            # pagegallerypath=os.path.join(gallerycontentpath, album)
+            #
+            # if(os.path.isdir(pagegallerypath)):
+            #     for i in os.listdir(pagegallerypath):
+            #         if not i.startswith('.') and os.path.isfile(os.path.join(os.path.join(gallerycontentpath, album), i)):
+            #             galleryimages.append(i)
+            #
+            # page.album = album
+            # page.galleryimages = sorted(galleryimages)
 
 
 def generate_people_page(generator):
@@ -43,6 +44,7 @@ def generate_people_page(generator):
 
     contentpath = generator.settings.get('PATH')
     people_path = os.path.join(contentpath, 'people')
+    people_image_path = os.path.join(contentpath, 'images', 'people')
 
     for page in generator.pages:
         if page.metadata.get('template') == 'people':
@@ -55,7 +57,7 @@ def generate_people_page(generator):
             for person in os.listdir(people_path):
                 if not person.startswith('.'):
                     prefix = person.split('.md')[0]
-                    logger.debug('!!!! prefix\t{0}'.format(prefix))
+                    logger.debug('prefix: \t{0}'.format(prefix))
                     html = '{0}.html'.format(prefix)
                     people[person] = html
 
@@ -63,5 +65,10 @@ def generate_people_page(generator):
 
 def register():
     # signals.article_generator_finalized.connect(add_gallery_post)
+
+    # Order is important here. Need to create the invidual "person" pages
+    # before adding the people page.
+    signals.article_generator_finalized.connect(add_person_page)
     signals.page_generator_finalized.connect(generate_people_page)
+
     # signals.page_generator_finalized.connect(add_gallery_page)
