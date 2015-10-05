@@ -1,3 +1,5 @@
+
+from collections import defaultdict
 import logging
 import os
 import sys
@@ -5,26 +7,26 @@ import sys
 from pelican import signals, logger
 # logger = logging.getLogger(__name__)
 
-def add_gallery_post(generator):
-
-    contentpath = generator.settings.get('PATH')
-    gallerycontentpath = os.path.join(contentpath,'people')
-
-    for article in generator.articles:
-        if article.metadata.get('template') == 'person':
-            name = article.metadata.get('title')
-            headshot = article.metadata.get('headshot')
-            position = article.metadata.get('position')
-
-
-def add_person_page(generator):
-
-    contentpath = generator.settings.get('PATH')
-    gallerycontentpath = os.path.join(contentpath, 'people')
-
-    for article in generator.articles:
-        if article.metadata.get('template') == 'person':
-            logger.debug(article.title)
+# def add_gallery_post(generator):
+#
+#     contentpath = generator.settings.get('PATH')
+#     gallerycontentpath = os.path.join(contentpath,'people')
+#
+#     for article in generator.articles:
+#         if article.metadata.get('template') == 'person':
+#             name = article.metadata.get('title')
+#             headshot = article.metadata.get('headshot')
+#             position = article.metadata.get('position')
+#
+#
+# def add_person_page(generator):
+#
+#     contentpath = generator.settings.get('PATH')
+#     gallerycontentpath = os.path.join(contentpath, 'people')
+#
+#     for article in generator.articles:
+#         if article.metadata.get('template') == 'person':
+#             logger.debug(article.title)
             # album = page.metadata.get('gallery')
             # galleryimages = []
             #
@@ -63,34 +65,54 @@ def add_person_page(generator):
 #
 #             page.people = people
 
-def generate_people_page(generators):
-    logger.debug('Generating people page ...')
-    articles, pages, statics = tuple(generators)
-    logger.debug('Articles: {}'.format(str(articles)))
-    logger.debug('Pages: {}'.format(str(pages)))
-    logger.debug('Statics: {}'.format(str(statics)))
+# def generate_people_page(pages, persons):
+#     logger.debug('Generating people page ...')
+#     # articles, pages, statics = tuple(generators)
+#     # logger.debug('Articles: {}'.format(str(articles)))
+#     # logger.debug('Pages: {}'.format(str(pages)))
+#     # logger.debug('Statics: {}'.format(str(statics)))
+#
+#     # people = dict()
+#     #
+#     # for person in articles.articles:
+#     #     logger.debug('\t Adding {}'.format(person.title))
+#     #     if person.metadata.get('template') == 'person':
+#     #         people[person.title] = person
+#     # logger.debug('People: {}'.format(str(people)))
+#
+#     for page in pages.pages:
+#         if page.metadata.get('template') == 'people':
+#             page.persons = persons
+#
+#     logger.debug('\tDone.')
 
-    people = dict()
+def generate_people_page(generator):
+    persons = defaultdict(dict)
+    i = 0
+    logger.debug('Gathering persons for people page ...')
+    for page in generator.pages:
+        if page.metadata.get('template') == 'person':
+            i += 1
+            persons[page.position][page.title] = page
+            logger.debug('\tPage {}: {}'.format(page.title, dir(page)))
+            # logger.debug('\tPage {}: {}'.format(page.title, repr(page.__dict__)))
+    logger.debug('\t Done. Found {} person pages.'.format(i))
 
-    for person in articles.articles:
-        logger.debug('\t Adding {}'.format(person.title))
-        if person.metadata.get('template') == 'person':
-            people[person.title] = person
-    logger.debug('People: {}'.format(str(people)))
-
-    for page in pages.pages:
+    logger.debug('Adding persons to people page ...')
+    for page in generator.pages:
+        # logger.debug('Iterating over pages again ... {}'.format(page.title))
         if page.metadata.get('template') == 'people':
-            page.people = people
-
-    logger.debug('\tDone.')
+            page.persons = persons
+    logger.debug('\t Done.')
+    return persons
 
 def register():
     # signals.article_generator_finalized.connect(add_gallery_post)
 
     # Order is important here. Need to create the invidual "person" pages
     # before adding the people page.
-    signals.all_generators_finalized.connect(generate_people_page)
+    # signals.all_generators_finalized.connect(generate_people_page)
     # signals.article_generator_finalized.connect(add_person_page)
-    # signals.page_generator_finalized.connect(generate_people_page)
-
+    signals.page_generator_finalized.connect(generate_people_page)
+    # signals.page_generator_finalized.send(generate_people_page, persons=persons)
     # signals.page_generator_finalized.connect(add_gallery_page)
