@@ -99,7 +99,7 @@ def generate_people_page(generator):
             else:
                 current[page.position][page.title] = page
             logger.debug('\tPage {}: {}'.format(page.title, dir(page)))
-            # logger.debug('\tPage {}: {}'.format(page.title, repr(page.__dict__)))
+            logger.debug('\tPage {}: {}'.format(page.title, repr(page.__dict__)))
     logger.debug('\t Done. Found {} person pages.'.format(i))
 
     logger.debug('Adding persons to people page ...')
