@@ -87,13 +87,17 @@ from pelican import signals, logger
 #     logger.debug('\tDone.')
 
 def generate_people_page(generator):
-    persons = defaultdict(dict)
+    current = defaultdict(dict)
+    alumni = defaultdict(dict)
     i = 0
     logger.debug('Gathering persons for people page ...')
     for page in generator.pages:
         if page.metadata.get('template') == 'person':
             i += 1
-            persons[page.position][page.title] = page
+            if page.alumni_or_current.lower() == 'alumni':
+                alumni[page.position][page.title] = page
+            else:
+                current[page.position][page.title] = page
             logger.debug('\tPage {}: {}'.format(page.title, dir(page)))
             # logger.debug('\tPage {}: {}'.format(page.title, repr(page.__dict__)))
     logger.debug('\t Done. Found {} person pages.'.format(i))
@@ -102,9 +106,11 @@ def generate_people_page(generator):
     for page in generator.pages:
         # logger.debug('Iterating over pages again ... {}'.format(page.title))
         if page.metadata.get('template') == 'people':
-            page.persons = persons
+            page.persons = current
+        if page.metadata.get('template') == 'alumni':
+            page.persons = alumni
     logger.debug('\t Done.')
-    return persons
+
 
 def register():
     # signals.article_generator_finalized.connect(add_gallery_post)
